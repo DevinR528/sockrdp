@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+</head>
+
+<body>
+    <pre id="messages"></pre>
+    <form id="form">
+        <input type="text" id="msg">
+        <input type="submit" value="Send">
+    </form>
+    <canvas id="myCanvas" width="1" height="0">
+        Your browser does not support the canvas element.
+    </canvas>
+    <script>
+        var c1 = document.createElement("canvas");
+        var ctx1 = c1.getContext("2d");
+
+        var socket = new WebSocket("ws://" + window.location.host + "/ws");
+        socket.onmessage = function (event) {
+            console.time("start")
+            var { chunks, width, height } = JSON.parse(event.data);
+
+            var c2 = document.getElementById("myCanvas");
+            var ctx2 = c2.getContext("2d");
+
+
+            c1.width = width;
+            c1.height = height;
+            var imgData = ctx1.createImageData(width, height);
+            for (var i = 0; i < imgData.data.length; i++) {
+                imgData.data[i] = chunks[i];
+            }
+            ctx1.putImageData(imgData, 0, 0);
+
+            c2.width = width;
+            c2.height = height;
+
+            ctx2.imageSmoothingEnabled = false;
+            ctx2.drawImage(c1, 0, 0, width, height);
+            console.timeLog("start");
+        };
+
+        var form = document.getElementById("form");
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var input = document.getElementById("msg");
+            socket.send(input.value);
+            input.value = "";
+        });
+    </script>
+</body>
+
+</html>
